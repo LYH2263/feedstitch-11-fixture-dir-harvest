@@ -63,6 +63,37 @@ def init_db():
             reason TEXT NOT NULL,
             created_at TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS harvest_tasks(
+            id INTEGER PRIMARY KEY,
+            directory TEXT NOT NULL,
+            recursive INTEGER NOT NULL DEFAULT 1,
+            status TEXT NOT NULL,
+            discovered_count INTEGER NOT NULL DEFAULT 0,
+            harvested_count INTEGER NOT NULL DEFAULT 0,
+            failed_count INTEGER NOT NULL DEFAULT 0,
+            ignored_count INTEGER NOT NULL DEFAULT 0,
+            parsed_items_count INTEGER NOT NULL DEFAULT 0,
+            canonical_count_before INTEGER NOT NULL DEFAULT 0,
+            canonical_count_after INTEGER NOT NULL DEFAULT 0,
+            report_json TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            finished_at TEXT
+        );
+        CREATE TABLE IF NOT EXISTS harvest_files(
+            id INTEGER PRIMARY KEY,
+            harvest_id INTEGER NOT NULL,
+            relative_path TEXT NOT NULL,
+            format TEXT NOT NULL,
+            parse_status TEXT NOT NULL,
+            parsed_count INTEGER NOT NULL DEFAULT 0,
+            error TEXT,
+            source_id INTEGER,
+            run_id INTEGER,
+            ingest_status TEXT NOT NULL DEFAULT 'not_run',
+            ingest_error TEXT,
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_harvest_files_harvest ON harvest_files(harvest_id);
         """
     )
     if conn.execute("SELECT COUNT(*) c FROM sources").fetchone()["c"] == 0:

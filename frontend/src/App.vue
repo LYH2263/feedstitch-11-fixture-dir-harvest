@@ -4,6 +4,7 @@
       <div class="brand">信汇 Feedstitch</div>
       <router-link to="/">总览</router-link>
       <router-link to="/sources">源管理</router-link>
+      <router-link to="/harvest">目录采集</router-link>
       <router-link to="/preview">样本预览</router-link>
       <router-link to="/workbench">运行台</router-link>
       <router-link to="/staging">Staging</router-link>

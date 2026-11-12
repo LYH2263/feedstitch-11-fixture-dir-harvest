@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
-from app.config import FIXTURES_DIR
+from app.config import resolve_fixture_path
 from app.db import connect
 from app.engines.merge_rules import decide_merge, eligible_for_incremental
 from app.engines.parse_feed import parse_fixture
@@ -18,7 +17,7 @@ def preview_source(source_id: int) -> dict[str, Any]:
         source = sources_repo.get_source(conn, source_id)
         if not source:
             raise ValueError("source not found")
-        path = FIXTURES_DIR / source["fixture_path"]
+        path = resolve_fixture_path(source["fixture_path"])
         items = parse_fixture(path, source["format"])
         return {
             "source": source,
@@ -46,7 +45,7 @@ def run_ingest(source_id: int, mode: str = "incremental") -> dict[str, Any]:
             source["watermark_ts"] = None
 
         run_id = runs_repo.create_run(conn, source_id, mode)
-        path = FIXTURES_DIR / source["fixture_path"]
+        path = resolve_fixture_path(source["fixture_path"])
 
         try:
             items = parse_fixture(path, source["format"])
@@ -66,6 +65,8 @@ def run_ingest(source_id: int, mode: str = "incremental") -> dict[str, Any]:
 
         parsed = 0
         upserted = 0
+        inserted = 0
+        updated = 0
         conflicts = 0
         skipped = 0
         max_event_ts: str | None = source.get("watermark_ts")
@@ -113,6 +114,10 @@ def run_ingest(source_id: int, mode: str = "incremental") -> dict[str, Any]:
                     disposition=decision,
                 )
                 upserted += 1
+                if decision == "insert":
+                    inserted += 1
+                else:
+                    updated += 1
                 dispositions.append(decision)
                 if max_event_ts is None or item["event_ts"] > max_event_ts:
                     max_event_ts = item["event_ts"]
@@ -159,6 +164,8 @@ def run_ingest(source_id: int, mode: str = "incremental") -> dict[str, Any]:
             "mode": mode,
             "parsed_count": parsed,
             "upserted_count": upserted,
+            "inserted_count": inserted,
+            "updated_count": updated,
             "conflict_count": conflicts,
             "skipped_count": skipped,
             "canonical_count": canonical_count,

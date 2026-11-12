@@ -25,6 +25,24 @@ def get_source(conn: sqlite3.Connection, source_id: int) -> dict[str, Any] | Non
     return dict(row) if row else None
 
 
+def create_source(
+    conn: sqlite3.Connection,
+    *,
+    name: str,
+    format: str,
+    fixture_path: str,
+    note: str,
+) -> int:
+    cur = conn.execute(
+        """
+        INSERT INTO sources(name, format, fixture_path, watermark_ts, lookback_seconds, enabled, note)
+        VALUES (?,?,?,NULL,0,1,?)
+        """,
+        (name, format, fixture_path, note),
+    )
+    return int(cur.lastrowid)
+
+
 def set_watermark(conn: sqlite3.Connection, source_id: int, watermark_ts: str | None) -> None:
     conn.execute("UPDATE sources SET watermark_ts = ? WHERE id = ?", (watermark_ts, source_id))
 

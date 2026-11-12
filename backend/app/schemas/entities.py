@@ -11,3 +11,14 @@ class LookbackUpdate(BaseModel):
 
 class SettingUpdate(BaseModel):
     value: str
+
+
+class HarvestRequest(BaseModel):
+    directory: str = Field(default="", max_length=1000)
+    recursive: bool = True
+    ingest: bool = True
+    mode: str = Field(default="incremental", pattern="^(incremental|full)$")
+
+
+class HarvestIngestRequest(BaseModel):
+    mode: str = Field(default="incremental", pattern="^(incremental|full)$")
